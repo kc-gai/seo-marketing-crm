@@ -1,0 +1,305 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// アクションアイテム管理
+model ActionItem {
+  id        String   @id @default(cuid())
+  title     String
+  priority  String   // HIGH, MEDIUM, LOW, REVIEW
+  status    String   // PENDING, IN_PROGRESS, DONE, BLOCKED
+  dueDate   DateTime?
+  assignee  String?
+  category  String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// KPI実績記録
+model KpiRecord {
+  id        String   @id @default(cuid())
+  month     String   // "2026-02"
+  metric    String   // "CTR", "clicks", "impressions", etc.
+  category  String   // "search", "keyword", "region", "conversion", "ai"
+  target    Float?
+  actual    Float?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([month, metric])
+}
+
+// AI引用モニタリング結果
+model AiCitation {
+  id        String   @id @default(cuid())
+  month     String   // "2026-02"
+  platform  String   // "perplexity", "bing", "chatgpt", "gemini"
+  keyword   String
+  scoreType String   // "A", "B", "C", "D", "E"
+  score     Int      // 10, 7, 3, 0, -2
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([month, platform, keyword])
+}
+
+// 月次サマリー（自動集計用）
+model MonthlySummary {
+  id              String   @id @default(cuid())
+  month           String   @unique // "2026-02"
+  impressions     Int?
+  clicks          Int?
+  ctr             Float?
+  avgPosition     Float?
+  users           Int?
+  pageviews       Int?
+  aiScore         Int?
+  aiCitationRate  Float?
+  actionsDone     Int?
+  actionsTotal    Int?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// コンテンツ制作計画
+model ContentPlan {
+  id           String   @id @default(cuid())
+  month        String   // "2026-02"
+  title        String
+  category     String   // "インバウンド", "マイナ免許証", "経営", etc.
+  productLink  String?  // "REborn", "チェックイン機", "両方", null
+  targetKw     String?
+  status       String   // PLANNED, WRITING, REVIEW, PUBLISHED
+  publishedAt  DateTime?
+  url          String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// 設定
+model Settings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// =======================================
+// メール一括送信機能
+// =======================================
+
+// メールテンプレート（1回目〜5回目以上）
+model EmailTemplate {
+  id           String   @id @default(cuid())
+  name         String                    // テンプレート名
+  contactRound Int                       // 接触回数 (1, 2, 3, 4, 5) 5=5回以上
+  subject      String                    // メール件名（変数含む）
+  bodyHtml     String                    // HTML本文
+  bodyText     String                    // テキスト本文（フォールバック）
+  variables    String?                   // 使用可能変数リスト JSON
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([contactRound])
+}
+
+// メール送信履歴
+model EmailLog {
+  id             String    @id @default(cuid())
+  companyId      String                   // 取引先ID
+  companyName    String                   // 会社名
+  recipientEmail String                   // 受信者メール
+  senderEmail    String                   // 送信者メール
+  subject        String                   // 実際送信した件名
+  bodyPreview    String?                  // 本文プレビュー（200字）
+  bodyText       String?                  // 送信した本文全体（履歴管理用）
+  templateId     String?                  // 使用テンプレートID
+  contactRound   Int                      // 何回目のメールか
+  status         String                   // SENT, FAILED, QUEUED, BOUNCED
+  errorMessage   String?                  // 失敗/バウンス時エラー
+  sentAt         DateTime  @default(now())
+  sentBy         String?                  // 送信者（担当者）
+  region         String?                  // 地域
+  office         String?                  // 管轄オフィス
+  openedAt       DateTime?               // メール開封時刻（将来拡張）
+  createdAt      DateTime  @default(now())
+
+  @@index([companyId])
+  @@index([sentAt])
+  @@index([status])
+}
+
+// メール送信設定
+model EmailSettings {
+  id                String   @id @default(cuid())
+  senderEmail       String   // 送信メールアドレス
+  senderName        String   // 送信者名
+  dailyLimit        Int      @default(50)    // 1日送信上限
+  intervalSeconds   Int      @default(30)    // 送信間隔（秒）
+  batchSize         Int      @default(10)    // バッチサイズ
+  batchIntervalMin  Int      @default(5)     // バッチ間待機（分）
+  followUpDays      Int      @default(7)     // フォローアップ通知日数
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// ブラックリスト（受信拒否企業）
+model EmailBlacklist {
+  id          String   @id @default(cuid())
+  companyId   String   @unique              // 取引先ID
+  companyName String                        // 会社名
+  email       String                        // ブロックされたメール
+  reason      String?                       // ブロック理由（受信拒否、バウンス、手動追加等）
+  blockedAt   DateTime @default(now())
+  blockedBy   String?                       // ブロックした担当者
+
+  @@index([email])
+}
+
+// =======================================
+// 営業進捗管理（会社・連絡・OTA・返信・問合せフォーム）
+// =======================================
+
+// レンタカー会社マスター（Google Sheets + OTA + 手動追加）
+model Company {
+  id             String   @id @default(cuid())
+  companyName    String
+  prefecture     String?  // 都道府県
+  region         String?  // 関東, 東北 etc.
+  office         String?  // A-E
+  phone          String?
+  email          String?
+  contactUrl     String?  // HP問合せURL
+  address        String?
+  status         String   @default("未交渉") // 未交渉, 連絡中, 商談中, 見積提出, 成約, 失注, 保留
+  systemInUse    String?
+  fleetSize      String?  // 保有台数
+  notes          String?
+  source         String   @default("manual") // manual, google-sheets, ota-crawl, pipedrive
+  sourceDetail   String?  // OTA名 or シート名
+  // SNS連絡先
+  lineId         String?
+  instagram      String?
+  twitter        String?
+  facebook       String?
+  otherSns       String?  // JSON: [{platform, url/id}]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  contactRecords  ContactRecord[]
+  inquiryFormLogs InquiryFormLog[]
+  emailReplies    EmailReply[]
+
+  @@index([companyName])
+  @@index([region])
+  @@index([source])
+}
+
+// 連絡履歴（メール・電話・問合せフォーム・SNS統合）
+model ContactRecord {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contactDate DateTime
+  contactType String   // mail, inquiry, phone, sns, reply
+  channel     String?  // email, line, instagram, web-form etc.
+  summary     String?  // 連絡要約
+  sentBy      String?  // 担当者
+  createdAt   DateTime @default(now())
+
+  @@index([companyId])
+  @@index([contactDate])
+}
+
+// メール返信（受信トラッキング）
+model EmailReply {
+  id            String   @id @default(cuid())
+  emailLogId    String?  // 元の送信EmailLog ID
+  companyId     String?
+  company       Company? @relation(fields: [companyId], references: [id])
+  fromEmail     String
+  fromName      String?
+  subject       String?
+  bodyPreview   String?  // 200字プレビュー
+  gmailMsgId    String   @unique // Gmail Message ID
+  threadId      String?  // Gmail Thread ID
+  receivedAt    DateTime
+  isRead        Boolean  @default(false)
+  slackNotified Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@index([fromEmail])
+  @@index([receivedAt])
+}
+
+// 問合せフォーム自動入力履歴
+model InquiryFormLog {
+  id           String    @id @default(cuid())
+  companyId    String
+  company      Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  formUrl      String
+  status       String    // pending, filled, submitted, failed
+  filledFields String?   // JSON: 入力フィールド
+  screenshot   String?   // スクリーンショットパス
+  submittedBy  String?
+  submittedAt  DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([companyId])
+}
+
+// 作業日誌
+model WorkLog {
+  id              String   @id @default(cuid())
+  date            String   // "2026-01-22"
+  title           String
+  description     String?
+  author          String   @default("Manual")
+  startTime       String?  // "10:00"
+  endTime         String?  // "18:00"
+  workHours       Float    @default(0)
+  category        String   @default("coding") // coding, manual, meeting, review, other
+  tools           String?  // JSON array: ["Next.js", "TypeScript"]
+  completedTasks  String?  // JSON array of strings
+  modifiedFiles   String?  // JSON array of strings
+  createdFiles    String?  // JSON array of strings
+  nextTasks       String?  // JSON array of strings
+  linesChanged    Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([date])
+}
+
+// コンテンツ最適化（リライト管理）
+model ContentRewrite {
+  id            String    @id @default(cuid())
+  articleTitle  String
+  articleUrl    String?
+  category      String?   // "CTR改善", "AEO対応", "構造改善"
+  initialCtr    Float?    // 開始時CTR
+  initialImpr   Int?      // 開始時表示回数
+  currentCtr    Float?    // 現在CTR
+  currentImpr   Int?      // 現在表示回数
+  status        String    // NOT_STARTED, IN_PROGRESS, COMPLETED
+  priority      String?   // HIGH, MEDIUM, LOW
+  changes       String?   // 実施した変更内容
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
