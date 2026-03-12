@@ -1152,7 +1152,7 @@ export default function SalesTrackingPage() {
 
         const normalizedLead = normalize(leadName)
         // mergedCompanies에 이미 있는 리드는 제외
-        const isMatched = [...mergedNames].some(name =>
+        const isMatched = Array.from(mergedNames).some(name =>
           name.includes(normalizedLead) || normalizedLead.includes(name)
         )
         if (isMatched) continue

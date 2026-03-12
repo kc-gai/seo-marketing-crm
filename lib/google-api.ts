@@ -145,7 +145,7 @@ export function getDateRanges(period: string) {
   const formatDate = (d: Date) => d.toISOString().split('T')[0]
 
   let startDate: Date
-  let endDate = new Date(today)
+  const endDate = new Date(today)
   endDate.setDate(endDate.getDate() - 1) // Yesterday (data delay)
 
   switch (period) {
