@@ -47,3 +47,5 @@ prisma/dev.db-journal
 
 # service account keys
 sa-key*.json*
+
+.vercel
