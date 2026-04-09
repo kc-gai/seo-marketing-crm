@@ -191,12 +191,6 @@ model Company {
   notes          String?
   source         String   @default("manual") // manual, google-sheets, ota-crawl, pipedrive
   sourceDetail   String?  // OTA名 or シート名
-  // SNS連絡先
-  lineId         String?
-  instagram      String?
-  twitter        String?
-  facebook       String?
-  otherSns       String?  // JSON: [{platform, url/id}]
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

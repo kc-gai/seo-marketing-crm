@@ -139,11 +139,6 @@ export async function POST(request: NextRequest) {
         notes: body.notes,
         source: body.source || 'manual',
         sourceDetail: body.sourceDetail,
-        lineId: body.lineId,
-        instagram: body.instagram,
-        twitter: body.twitter,
-        facebook: body.facebook,
-        otherSns: body.otherSns,
       },
     })
 
@@ -179,11 +174,6 @@ export async function PUT(request: NextRequest) {
         systemInUse: data.systemInUse,
         fleetSize: data.fleetSize,
         notes: data.notes,
-        lineId: data.lineId,
-        instagram: data.instagram,
-        twitter: data.twitter,
-        facebook: data.facebook,
-        otherSns: data.otherSns,
       },
     })
 

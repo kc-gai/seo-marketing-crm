@@ -27,7 +27,6 @@ import {
   Trash2,
   X,
   Send,
-  MessageCircle,
   Inbox,
   FileEdit,
 } from 'lucide-react'
@@ -305,10 +304,6 @@ export default function SalesTrackingPage() {
     status: '未交渉' as ProgressStatus,
     systemInUse: '',
     notes: '',
-    lineId: '',
-    instagram: '',
-    twitter: '',
-    facebook: '',
   })
 
   // Contact Record State (manual logging)
@@ -670,10 +665,6 @@ export default function SalesTrackingPage() {
       status: '未交渉',
       systemInUse: '',
       notes: '',
-      lineId: '',
-      instagram: '',
-      twitter: '',
-      facebook: '',
     })
     setShowCompanyModal(true)
   }
@@ -691,10 +682,6 @@ export default function SalesTrackingPage() {
       status: company.status,
       systemInUse: company.systemInUse,
       notes: company.notes,
-      lineId: '',
-      instagram: '',
-      twitter: '',
-      facebook: '',
     })
     setNewContact({ date: new Date().toISOString().split('T')[0], type: 'mail', summary: '' })
     // Load contact records for this company
@@ -792,10 +779,6 @@ export default function SalesTrackingPage() {
               status: companyForm.status,
               systemInUse: companyForm.systemInUse,
               notes: companyForm.notes,
-              lineId: companyForm.lineId || null,
-              instagram: companyForm.instagram || null,
-              twitter: companyForm.twitter || null,
-              facebook: companyForm.facebook || null,
             }),
           })
         } else {
@@ -816,10 +799,6 @@ export default function SalesTrackingPage() {
               notes: companyForm.notes,
               source: 'manual',
               sourceDetail: `sheets-override:${editingCompany.id}`,
-              lineId: companyForm.lineId || null,
-              instagram: companyForm.instagram || null,
-              twitter: companyForm.twitter || null,
-              facebook: companyForm.facebook || null,
             }),
           })
         }
@@ -840,10 +819,6 @@ export default function SalesTrackingPage() {
             status: companyForm.status,
             systemInUse: companyForm.systemInUse,
             notes: companyForm.notes,
-            lineId: companyForm.lineId || null,
-            instagram: companyForm.instagram || null,
-            twitter: companyForm.twitter || null,
-            facebook: companyForm.facebook || null,
           }),
         })
       } else {
@@ -863,10 +838,6 @@ export default function SalesTrackingPage() {
             systemInUse: companyForm.systemInUse,
             notes: companyForm.notes,
             source: 'manual',
-            lineId: companyForm.lineId || null,
-            instagram: companyForm.instagram || null,
-            twitter: companyForm.twitter || null,
-            facebook: companyForm.facebook || null,
           }),
         })
       }
@@ -3462,7 +3433,6 @@ export default function SalesTrackingPage() {
                         <option value="mail">{locale === 'ja' ? 'メール' : '메일'}</option>
                         <option value="inquiry">{locale === 'ja' ? '問合せフォーム' : '문의폼'}</option>
                         <option value="phone">{locale === 'ja' ? '電話' : '전화'}</option>
-                        <option value="sns">SNS</option>
                         <option value="reply">{locale === 'ja' ? '返信受信' : '회신 수신'}</option>
                       </select>
                       <button
@@ -3501,7 +3471,7 @@ export default function SalesTrackingPage() {
                              r.contactType === 'inquiry' ? (locale === 'ja' ? '問合せ' : '문의') :
                              r.contactType === 'phone' ? (locale === 'ja' ? '電話' : '전화') :
                              r.contactType === 'reply' ? (locale === 'ja' ? '返信' : '회신') :
-                             'SNS'}
+                             (locale === 'ja' ? 'その他' : '기타')}
                           </span>
                           {r.summary && <span className="truncate flex-1">{r.summary}</span>}
                           <button
@@ -3517,57 +3487,6 @@ export default function SalesTrackingPage() {
                 </div>
               )}
 
-              {/* SNS Contacts */}
-              <div className="border-t pt-4 mt-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <MessageCircle className="w-4 h-4 text-green-500" />
-                  <label className="block text-sm font-semibold text-gray-700">
-                    {locale === 'ja' ? 'SNS連絡先' : 'SNS 연락처'}
-                  </label>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">LINE ID</label>
-                    <input
-                      type="text"
-                      value={(companyForm as Record<string, string>).lineId || ''}
-                      onChange={(e) => setCompanyForm({ ...companyForm, lineId: e.target.value } as typeof companyForm)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                      placeholder="@line_id"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Instagram</label>
-                    <input
-                      type="text"
-                      value={(companyForm as Record<string, string>).instagram || ''}
-                      onChange={(e) => setCompanyForm({ ...companyForm, instagram: e.target.value } as typeof companyForm)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                      placeholder="@username"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Twitter/X</label>
-                    <input
-                      type="text"
-                      value={(companyForm as Record<string, string>).twitter || ''}
-                      onChange={(e) => setCompanyForm({ ...companyForm, twitter: e.target.value } as typeof companyForm)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                      placeholder="@handle"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Facebook</label>
-                    <input
-                      type="text"
-                      value={(companyForm as Record<string, string>).facebook || ''}
-                      onChange={(e) => setCompanyForm({ ...companyForm, facebook: e.target.value } as typeof companyForm)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                      placeholder="facebook.com/..."
-                    />
-                  </div>
-                </div>
-              </div>
             </div>
             <div className="flex items-center justify-end gap-3 p-4 border-t bg-gray-50">
               <button
